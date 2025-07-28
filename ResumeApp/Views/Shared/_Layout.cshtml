@@ -1,0 +1,45 @@
+﻿<!-- Views/Shared/_Layout.cshtml -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CV-İş Eşleştirme Platformu</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <div class="p-4">
+                <h1 class="text-2xl font-bold text-gray-800">CV Match</h1>
+            </div>
+            <nav class="mt-4">
+                <a href="@Url.Action("Index", "Home")" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <span class="material-icons mr-2">home</span>
+                    Ana Sayfa
+                </a>
+                <a href="@Url.Action("Upload", "Resume")" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <span class="material-icons mr-2">upload_file</span>
+                    CV Yükle
+                </a>
+                <a href="#chatbot" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <span class="material-icons mr-2">chat</span>
+                    Chatbot
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-y-auto">
+            <main class="p-6">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
