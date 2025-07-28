@@ -1,5 +1,8 @@
 using BusinessLayer.Abstract;
 using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
+using UglyToad.PdfPig;
 
 namespace BusinessLayer.Concrete
 {
@@ -7,9 +10,14 @@ namespace BusinessLayer.Concrete
     {
         public async Task<string> ParsePdfContent(string filePath)
         {
-            // TODO: Implement PDF parsing logic
-            // Şimdilik basit bir implementasyon
-            return await Task.FromResult("Parsed content will be here");
+            if (!File.Exists(filePath))
+                return "PDF dosyası bulunamadı.";
+
+            using (var pdf = PdfDocument.Open(filePath))
+            {
+                var text = string.Join("\n", pdf.GetPages().Select(p => p.Text));
+                return await Task.FromResult(text);
+            }
         }
     }
 } 

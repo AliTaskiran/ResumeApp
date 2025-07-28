@@ -206,11 +206,11 @@ başlıkları altında detaylı bir analiz yap."
                                             {
                                                 var text = textElement.GetString();
                                                 Console.WriteLine($"Text found: {text != null}, Length: {text?.Length ?? 0}");
-                                                
-                                                if (!string.IsNullOrEmpty(text))
-                                                {
+
+                        if (!string.IsNullOrEmpty(text))
+                        {
                                                     Console.WriteLine($"Başarılı yanıt alındı. Uzunluk: {text.Length}");
-                                                    return text;
+                            return text;
                                                 }
                                                 else
                                                 {
@@ -271,7 +271,7 @@ başlıkları altında detaylı bir analiz yap."
                 {
                     Console.WriteLine($"API yanıt vermedi. Durum Kodu: {response.StatusCode}");
                     Console.WriteLine($"API Error Response: {responseContent}");
-                    return $"API yanıt vermedi. Durum Kodu: {response.StatusCode}, Yanıt: {responseContent}";
+                return $"API yanıt vermedi. Durum Kodu: {response.StatusCode}, Yanıt: {responseContent}";
                 }
             }
             catch (Exception ex)
