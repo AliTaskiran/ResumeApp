@@ -2,40 +2,29 @@
 @model Resume
 @{
     ViewData["Title"] = "CV Yükle";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-3xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
-                <h2 class="text-2xl font-bold text-white flex items-center">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    CV Yükle ve İş Eşleştir
-                </h2>
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    CV Yükle
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    PDF formatında CV'nizi yükleyin. Sistem otomatik olarak içeriği analiz edip uygun işlerle eşleştirecektir.
+                </p>
             </div>
 
-            <!-- Form -->
-            <div class="px-8 py-6">
-                <form asp-controller="Resume" asp-action="Upload" method="post" enctype="multipart/form-data" class="space-y-6">
-                    <!-- CV Başlığı -->
-                    <div>
-                        <label asp-for="Title" class="block text-sm font-medium text-gray-700">CV Başlığı</label>
-                        <div class="mt-1">
-                            <input asp-for="Title"
-                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                   placeholder="Örn: Senior Java Developer CV">
-                        </div>
-                        <span asp-validation-for="Title" class="text-sm text-red-600"></span>
-                    </div>
+            <form asp-action="Upload" method="post" enctype="multipart/form-data" class="px-4 py-5 sm:p-6">
+                <div asp-validation-summary="All" class="text-red-500 text-sm mb-4"></div>
 
-                    <!-- PDF Upload -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">CV Dosyası (PDF)</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors duration-200">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">
+                            CV Dosyası (PDF)
+                        </label>
+                        <div class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors duration-200">
                             <div class="space-y-1 text-center">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -46,37 +35,26 @@
                                         <input id="pdfFile" name="pdfFile" type="file" accept=".pdf" class="sr-only" required>
                                     </label>
                                 </div>
-                                <p class="text-xs text-gray-500">PDF, Maks. 10MB</p>
-                            </div>
-                        </div>
-                        <div id="fileInfo" class="hidden mt-2 text-sm text-gray-500"></div>
-                    </div>
-
-                    <!-- Info Alert -->
-                    <div class="rounded-lg bg-blue-50 p-4">
-                        <div class="flex">
-                            <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div class="ml-3">
-                                <p class="text-sm text-blue-700">
-                                    CV'niz yüklendikten sonra, yapay zeka sistemimiz içeriğini analiz edip uygun iş ilanlarını eşleştirecektir.
+                                <p class="text-xs text-gray-500">
+                                    Sadece PDF formatı kabul edilmektedir
                                 </p>
                             </div>
                         </div>
+                        <div id="fileInfo" class="mt-2 text-sm text-gray-500 hidden"></div>
                     </div>
+                </div>
 
-                    <!-- Submit Button -->
-                    <div>
-                        <button type="submit" class="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
-                            CV'yi Yükle ve Eşleştir
+                <div class="mt-6">
+                    <div class="flex justify-end space-x-3">
+                        <a href="@Url.Action("Index")" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            İptal
+                        </a>
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Yükle ve Analiz Et
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -87,10 +65,10 @@
         document.getElementById('pdfFile').addEventListener('change', function () {
             const file = this.files[0];
             const fileInfo = document.getElementById('fileInfo');
-
+            
             if (file) {
                 if (file.type !== 'application/pdf') {
-                    showNotification('Lütfen sadece PDF dosyası yükleyin!', 'error');
+                    alert('Lütfen sadece PDF dosyası yükleyin!');
                     this.value = '';
                     fileInfo.classList.add('hidden');
                     return;
@@ -98,7 +76,7 @@
 
                 const fileSize = file.size / 1024 / 1024; // MB
                 if (fileSize > 10) {
-                    showNotification('Dosya boyutu 10MB\'dan büyük olamaz!', 'error');
+                    alert('Dosya boyutu 10MB\'dan büyük olamaz!');
                     this.value = '';
                     fileInfo.classList.add('hidden');
                     return;
@@ -108,6 +86,8 @@
                 fileInfo.textContent = `Seçilen dosya: ${file.name} (${fileSize.toFixed(2)} MB)`;
                 fileInfo.classList.remove('hidden');
                 fileInfo.classList.add('text-green-600');
+            } else {
+                fileInfo.classList.add('hidden');
             }
         });
 
@@ -116,24 +96,8 @@
             const fileInput = document.getElementById('pdfFile');
             if (!fileInput.files.length) {
                 e.preventDefault();
-                showNotification('Lütfen bir PDF dosyası seçin!', 'error');
+                alert('Lütfen bir PDF dosyası seçin!');
             }
         });
-
-        // Bildirim gösterme fonksiyonu
-        function showNotification(message, type) {
-            const notificationDiv = document.createElement('div');
-            notificationDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} text-white transform transition-transform duration-300 ease-in-out`;
-            notificationDiv.textContent = message;
-            document.body.appendChild(notificationDiv);
-
-            setTimeout(() => {
-                notificationDiv.remove();
-            }, 3000);
-        }
     </script>
-
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
 }

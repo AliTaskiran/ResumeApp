@@ -24,7 +24,10 @@ namespace DataAccessLayer.Concrete
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=DESKTOP-0CSOJOE;Database=JobPortalDb;Trusted_Connection=True;");
+                optionsBuilder.UseSqlServer(
+                    "Server=DESKTOP-0CSOJOE;Database=JobPortalDb;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true;Integrated Security=true;",
+                    options => options.EnableRetryOnFailure()
+                );
             }
         }
 
@@ -102,6 +105,9 @@ namespace DataAccessLayer.Concrete
                 .WithMany()
                 .HasForeignKey(cm => cm.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Seed data
+            SeedData.Seed(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
         }

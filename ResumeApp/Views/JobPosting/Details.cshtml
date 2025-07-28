@@ -1,0 +1,103 @@
+@model JobPosting
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">@Model.Title</h1>
+                        <p class="mt-1 text-lg text-gray-600">@Model.CompanyName</p>
+                    </div>
+                    @if (Model.IsRemote)
+                    {
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Uzaktan
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Job Details -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">İş Tanımı</h2>
+                    <p class="mt-2 text-gray-600 whitespace-pre-line">@Model.Description</p>
+                </div>
+
+                <!-- Required Skills -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Gerekli Yetenekler</h2>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach (var skill in Model.RequiredSkills.Split(','))
+                        {
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                @skill.Trim()
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Job Info -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">İş Bilgileri</h2>
+                        <dl class="mt-2 space-y-3">
+                            <div class="flex items-center">
+                                <dt class="text-sm text-gray-500 w-32">Deneyim</dt>
+                                <dd class="text-sm text-gray-900">@Model.RequiredExperience yıl</dd>
+                            </div>
+                            <div class="flex items-center">
+                                <dt class="text-sm text-gray-500 w-32">Lokasyon</dt>
+                                <dd class="text-sm text-gray-900">@Model.Location</dd>
+                            </div>
+                            <div class="flex items-center">
+                                <dt class="text-sm text-gray-500 w-32">Çalışma Şekli</dt>
+                                <dd class="text-sm text-gray-900">@Model.EmploymentType</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Ücret Bilgisi</h2>
+                        <dl class="mt-2 space-y-3">
+                            <div class="flex items-center">
+                                <dt class="text-sm text-gray-500 w-32">Minimum</dt>
+                                <dd class="text-sm text-gray-900">@(Model.SalaryMin?.ToString("N0") ?? "Belirtilmemiş") ₺</dd>
+                            </div>
+                            <div class="flex items-center">
+                                <dt class="text-sm text-gray-500 w-32">Maksimum</dt>
+                                <dd class="text-sm text-gray-900">@(Model.SalaryMax?.ToString("N0") ?? "Belirtilmemiş") ₺</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Application Section -->
+                <div class="mt-8 border-t border-gray-200 pt-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">Başvuru</h2>
+                            <p class="mt-1 text-sm text-gray-500">
+                                İlan Tarihi: @Model.CreatedDate.ToString("dd MMMM yyyy")
+                                <br />
+                                Son Başvuru: @Model.ExpiryDate?.ToString("dd MMMM yyyy")
+                            </p>
+                        </div>
+                        <div class="flex space-x-4">
+                            <a href="@Url.Action("Upload", "Resume")" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                                CV Yükle ve Başvur
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

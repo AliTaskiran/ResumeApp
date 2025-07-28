@@ -31,12 +31,12 @@ namespace BusinessLayer.Concrete
 
         public void TDelete(ChatMessage t)
         {
-           _chatMessageDal.Delete(t);
+            _chatMessageDal.Delete(t);
         }
 
         public ChatMessage TGetById(int id)
         {
-          return _chatMessageDal.GetById(id);
+            return _chatMessageDal.GetById(id);
         }
 
         public List<ChatMessage> TGetList()

@@ -3,7 +3,6 @@ using DataAccessLayer.Concrete;
 using DataAccessLayer.Repositories;
 using EntityLayer;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
 namespace DataAccessLayer.EntityFramework
 {
@@ -15,6 +14,25 @@ namespace DataAccessLayer.EntityFramework
             await context.Resumes.AddAsync(entity);
             await context.SaveChangesAsync();
             return entity;
+        }
+
+        public async Task<Resume> GetByIdAsync(int id)
+        {
+            using var context = new Context();
+            return await context.Resumes.FindAsync(id);
+        }
+
+        public async Task<List<Resume>> GetListAsync()
+        {
+            using var context = new Context();
+            return await context.Resumes.ToListAsync();
+        }
+
+        public async Task UpdateAsync(Resume entity)
+        {
+            using var context = new Context();
+            context.Resumes.Update(entity);
+            await context.SaveChangesAsync();
         }
     }
 }

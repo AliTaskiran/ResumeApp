@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.Abstract
 {
-    public interface IChatMessageService:IGenericService<ChatMessage>
+    public interface IChatMessageService : IGenericService<ChatMessage>
     {
         Task<ChatMessage> AddAsync(ChatMessage chatMessage);
     }

@@ -4,6 +4,7 @@ using DataAccessLayer.Concrete;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccessLayer.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20250728054242_seed")]
+    partial class seed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -171,10 +174,10 @@ namespace DataAccessLayer.Migrations
                         {
                             Id = 1,
                             CompanyName = "Tech Solutions A.Ş.",
-                            CreatedDate = new DateTime(2025, 7, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3801),
+                            CreatedDate = new DateTime(2025, 7, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4502),
                             Description = "Kurumsal müşterilerimiz için web uygulamaları geliştiren ekibimize katılacak, en az 5 yıl deneyimli .NET Developer arıyoruz.",
                             EmploymentType = "Tam Zamanlı",
-                            ExpiryDate = new DateTime(2025, 8, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3803),
+                            ExpiryDate = new DateTime(2025, 8, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4503),
                             IsActive = true,
                             IsFilled = false,
                             IsRemote = true,
@@ -190,10 +193,10 @@ namespace DataAccessLayer.Migrations
                         {
                             Id = 2,
                             CompanyName = "Digital Minds",
-                            CreatedDate = new DateTime(2025, 7, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3821),
+                            CreatedDate = new DateTime(2025, 7, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4517),
                             Description = "E-ticaret projelerimizde görev alacak, modern frontend teknolojilerine hakim React Developer arıyoruz.",
                             EmploymentType = "Tam Zamanlı",
-                            ExpiryDate = new DateTime(2025, 8, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3822),
+                            ExpiryDate = new DateTime(2025, 8, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4518),
                             IsActive = true,
                             IsFilled = false,
                             IsRemote = true,
@@ -209,10 +212,10 @@ namespace DataAccessLayer.Migrations
                         {
                             Id = 3,
                             CompanyName = "Cloud Systems",
-                            CreatedDate = new DateTime(2025, 7, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3828),
+                            CreatedDate = new DateTime(2025, 7, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4521),
                             Description = "Bulut altyapımızı yönetecek ve geliştirme süreçlerimizi iyileştirecek DevOps Mühendisi arıyoruz.",
                             EmploymentType = "Tam Zamanlı",
-                            ExpiryDate = new DateTime(2025, 8, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3829),
+                            ExpiryDate = new DateTime(2025, 8, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4522),
                             IsActive = true,
                             IsFilled = false,
                             IsRemote = true,
@@ -228,10 +231,10 @@ namespace DataAccessLayer.Migrations
                         {
                             Id = 4,
                             CompanyName = "AI Solutions",
-                            CreatedDate = new DateTime(2025, 7, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3834),
+                            CreatedDate = new DateTime(2025, 7, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4525),
                             Description = "Yapay zeka projelerimizde görev alacak, Python ve ML konularında deneyimli geliştirici arıyoruz.",
                             EmploymentType = "Tam Zamanlı",
-                            ExpiryDate = new DateTime(2025, 8, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3835),
+                            ExpiryDate = new DateTime(2025, 8, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4525),
                             IsActive = true,
                             IsFilled = false,
                             IsRemote = true,
@@ -247,10 +250,10 @@ namespace DataAccessLayer.Migrations
                         {
                             Id = 5,
                             CompanyName = "Mobile Tech",
-                            CreatedDate = new DateTime(2025, 7, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3839),
+                            CreatedDate = new DateTime(2025, 7, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4529),
                             Description = "Cross-platform mobil uygulama geliştirme konusunda deneyimli Flutter Developer arıyoruz.",
                             EmploymentType = "Tam Zamanlı",
-                            ExpiryDate = new DateTime(2025, 8, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3840),
+                            ExpiryDate = new DateTime(2025, 8, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4529),
                             IsActive = true,
                             IsFilled = false,
                             IsRemote = true,
@@ -312,6 +315,7 @@ namespace DataAccessLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
@@ -430,7 +434,7 @@ namespace DataAccessLayer.Migrations
                         {
                             Id = 1,
                             CompanyName = "Admin Company",
-                            CreatedDate = new DateTime(2025, 7, 28, 9, 6, 12, 966, DateTimeKind.Local).AddTicks(3222),
+                            CreatedDate = new DateTime(2025, 7, 28, 8, 42, 41, 656, DateTimeKind.Local).AddTicks(4297),
                             Email = "admin@example.com",
                             FirstName = "Admin",
                             IsActive = true,

@@ -31,7 +31,7 @@ namespace EntityLayer
         public string Education { get; set; }
 
         [StringLength(1000)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [StringLength(200)]
         public string? LinkedInProfile { get; set; }

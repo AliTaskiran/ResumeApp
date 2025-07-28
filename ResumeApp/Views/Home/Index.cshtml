@@ -1,4 +1,4 @@
-﻿
+
 @{
     ViewData["Title"] = "Ana Sayfa";
 }
@@ -218,9 +218,8 @@
         <div class="flex space-x-2">
             <input type="text" id="messageInput" 
                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                   placeholder="Mesajınızı yazın..."
-                   onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                   placeholder="Mesajınızı yazın...">
+            <button id="sendButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
@@ -267,33 +266,79 @@
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
             
-            if (!message) return;
-
-            // Kullanıcı mesajını göster
-            appendMessage(message, false);
-            messageInput.value = '';
+            if (!message) {
+                console.log('Mesaj boş, gönderilmiyor');
+                return;
+            }
 
             try {
+                console.log('Mesaj gönderiliyor:', message);
+                
+                // Kullanıcı mesajını göster
+                appendMessage(message, false);
+                messageInput.value = '';
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                console.log('CSRF Token:', token);
+
                 const response = await fetch('/Home/SendMessage', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
                         content: message,
-                        isFromBot: false
+                        __RequestVerificationToken: token
                     })
                 });
 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
+                
                 if (data.success) {
-                    // Bot yanıtını göster
                     appendMessage(data.response, true);
+                } else {
+                    appendMessage('Üzgünüm, bir hata oluştu: ' + (data.error || 'Bilinmeyen hata'), true);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 appendMessage('Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.', true);
             }
         }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Sayfa yüklendi, event listener\'lar ekleniyor...');
+            
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+
+            console.log('Mesaj input alanı:', messageInput);
+            console.log('Gönder butonu:', sendButton);
+
+            if (messageInput) {
+                messageInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        console.log('Enter tuşuna basıldı');
+                        event.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+
+            if (sendButton) {
+                console.log('Gönder butonu bulundu, click event\'i ekleniyor...');
+                sendButton.addEventListener('click', function(event) {
+                    console.log('Gönder butonuna tıklandı');
+                    event.preventDefault();
+                    sendMessage();
+                });
+            }
+        });
     </script>
 }
+
+@* CSRF Token *@
+@Html.AntiForgeryToken()

@@ -21,6 +21,21 @@ namespace BusinessLayer.Concrete
             return resume;
         }
 
+        public async Task<Resume> GetByIdAsync(int id)
+        {
+            return await _resumeDal.GetByIdAsync(id);
+        }
+
+        public async Task<List<Resume>> GetListAsync()
+        {
+            return await _resumeDal.GetListAsync();
+        }
+
+        public async Task UpdateAsync(Resume resume)
+        {
+            await _resumeDal.UpdateAsync(resume);
+        }
+
         public void TAdd(Resume t)
         {
             _resumeDal.Insert(t);
