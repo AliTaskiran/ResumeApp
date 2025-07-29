@@ -308,9 +308,52 @@
             }
         }
 
+        // Global fonksiyon - diğer sayfalardan çağrılabilir
+        function updateChatMessages() {
+            // Sohbet mesajlarını yenile
+            console.log('Sohbet mesajları güncelleniyor...');
+            loadChatMessages();
+        }
+
+        async function loadChatMessages() {
+            try {
+                const response = await fetch('/Home/GetChatMessages');
+                if (response.ok) {
+                    const data = await response.json();
+                    const chatMessages = document.getElementById('chatMessages');
+                    
+                    // Mevcut mesajları temizle (ilk mesaj hariç)
+                    const firstMessage = chatMessages.firstElementChild;
+                    chatMessages.innerHTML = '';
+                    chatMessages.appendChild(firstMessage);
+                    
+                    // Yeni mesajları ekle
+                    if (data.messages && data.messages.length > 0) {
+                        data.messages.forEach(message => {
+                            appendMessage(message.content, message.isFromBot);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Mesajlar yüklenirken hata:', error);
+            }
+        }
+
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Sayfa yüklendi, event listener\'lar ekleniyor...');
+            
+            // Mevcut mesajları yükle
+            loadChatMessages();
+            
+            // URL parametresini kontrol et
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('openChat') === 'true') {
+                // Sohbeti otomatik aç
+                setTimeout(() => {
+                    toggleChat();
+                }, 500);
+            }
             
             const messageInput = document.getElementById('messageInput');
             const sendButton = document.getElementById('sendButton');

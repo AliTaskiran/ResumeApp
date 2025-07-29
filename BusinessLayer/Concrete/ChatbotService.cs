@@ -11,8 +11,9 @@ namespace BusinessLayer.Concrete
     {
         private readonly IConfiguration _configuration;
         private readonly IResumeService _resumeService;
+        private readonly IMatchingService _matchingService;
         private readonly HttpClient _httpClient;
-        private const string GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
+        private const string GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
         private const string SYSTEM_PROMPT = @"Sen bir CV-İş Eşleştirme asistanısın. Görevin:
 1. Kullanıcıların CV'lerini analiz etmek
@@ -31,10 +32,12 @@ Cevaplarını Türkçe, profesyonel ve yardımsever bir tonda ver.";
 
         public ChatbotService(
             IConfiguration configuration,
-            IResumeService resumeService)
+            IResumeService resumeService,
+            IMatchingService matchingService)
         {
             _configuration = configuration;
             _resumeService = resumeService;
+            _matchingService = matchingService;
             _httpClient = new HttpClient();
         }
 
@@ -62,7 +65,7 @@ Cevaplarını Türkçe, profesyonel ve yardımsever bir tonda ver.";
                 if (cvIdMatch.Success && int.TryParse(cvIdMatch.Groups[1].Value, out int cvId))
                 {
                     Console.WriteLine($"CV ID bulundu: {cvId}");
-                    selectedCV = _resumeService.TGetById(cvId);
+                    selectedCV = await _resumeService.GetByIdAsync(cvId);
                     if (selectedCV == null)
                     {
                         Console.WriteLine("Belirtilen CV bulunamadı");
@@ -73,8 +76,8 @@ Cevaplarını Türkçe, profesyonel ve yardımsever bir tonda ver.";
                 {
                     // Kullanıcının ana CV'sini al
                     var userId = 1; // Şimdilik sabit
-                    selectedCV = _resumeService.TGetList()
-                        .FirstOrDefault(r => r.UserId == userId && r.IsMainResume);
+                    var allResumes = await _resumeService.GetListAsync();
+                    selectedCV = allResumes.FirstOrDefault(r => r.UserId == userId && r.IsMainResume);
                     Console.WriteLine($"Ana CV bulundu: {selectedCV?.Title ?? "Yok"}");
                 }
 
@@ -94,7 +97,30 @@ Lütfen bu CV için:
 başlıkları altında detaylı bir analiz yap."
                     : "Kullanıcının henüz bir CV'si yok.";
 
+                // İş eşleştirme özelliği
+                string matchingJobsInfo = "";
+                if (selectedCV != null && !string.IsNullOrEmpty(selectedCV.ParsedContent))
+                {
+                    try
+                    {
+                        matchingJobsInfo = await _matchingService.GetMatchingJobsSummary(selectedCV.ParsedContent);
+                        Console.WriteLine("İş eşleştirme tamamlandı");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"İş eşleştirme hatası: {ex.Message}");
+                        matchingJobsInfo = "İş eşleştirme sırasında bir hata oluştu.";
+                    }
+                }
+
                 var fullContext = $"{SYSTEM_PROMPT}\n\n{userContext}\n\nKullanıcı Mesajı: {userMessage}";
+
+                // Eğer iş eşleştirme bilgisi varsa ekle
+                if (!string.IsNullOrEmpty(matchingJobsInfo))
+                {
+                    fullContext += $"\n\n📋 UYGUN İŞ İLANLARI:\n{matchingJobsInfo}";
+                }
+
                 Console.WriteLine($"Tam context hazırlandı. Uzunluk: {fullContext.Length}");
 
                 var requestBody = new
@@ -206,11 +232,11 @@ başlıkları altında detaylı bir analiz yap."
                                             {
                                                 var text = textElement.GetString();
                                                 Console.WriteLine($"Text found: {text != null}, Length: {text?.Length ?? 0}");
-
-                        if (!string.IsNullOrEmpty(text))
-                        {
+                                                
+                                                if (!string.IsNullOrEmpty(text))
+                                                {
                                                     Console.WriteLine($"Başarılı yanıt alındı. Uzunluk: {text.Length}");
-                            return text;
+                                                    return text;
                                                 }
                                                 else
                                                 {
@@ -271,7 +297,7 @@ başlıkları altında detaylı bir analiz yap."
                 {
                     Console.WriteLine($"API yanıt vermedi. Durum Kodu: {response.StatusCode}");
                     Console.WriteLine($"API Error Response: {responseContent}");
-                return $"API yanıt vermedi. Durum Kodu: {response.StatusCode}, Yanıt: {responseContent}";
+                    return $"API yanıt vermedi. Durum Kodu: {response.StatusCode}, Yanıt: {responseContent}";
                 }
             }
             catch (Exception ex)

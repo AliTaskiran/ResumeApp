@@ -13,6 +13,7 @@ namespace ResumeApp.Controllers
         private readonly IResumeService _resumeService;
         private readonly IChatbotService _chatbotService;
         private readonly IAIService _aiService;
+        private readonly IMatchingService _matchingService;
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(
@@ -20,12 +21,14 @@ namespace ResumeApp.Controllers
             IResumeService resumeService,
             IChatbotService chatbotService,
             IAIService aiService,
+            IMatchingService matchingService,
             ILogger<HomeController> logger)
         {
             _chatMessageService = chatMessageService;
             _resumeService = resumeService;
             _chatbotService = chatbotService;
             _aiService = aiService;
+            _matchingService = matchingService;
             _logger = logger;
         }
 
@@ -136,11 +139,113 @@ namespace ResumeApp.Controllers
                 var analysis = await _chatbotService.GetResponseAsync(message);
                 _logger.LogInformation("Chatbot CV analizi yanıtı alındı. Uzunluk: {Length}", analysis?.Length ?? 0);
 
-                return Json(new { success = true, response = analysis });
+                // Analiz sonucunu Session'a kaydet
+                HttpContext.Session.SetString("LastAnalysis", analysis ?? "Analiz sonucu alınamadı");
+
+                // İş ilanlarını al
+                var matchingJobs = new List<object>();
+                if (!string.IsNullOrEmpty(resume.ParsedContent))
+                {
+                    try
+                    {
+                        var jobs = await _matchingService.FindMatchingJobs(resume.ParsedContent);
+                        matchingJobs = jobs.Take(6).Select(job => (object)new
+                        {
+                            title = job.Title,
+                            company = job.CompanyName,
+                            location = job.Location,
+                            description = job.Description.Length > 100 ? job.Description.Substring(0, 100) + "..." : job.Description,
+                            salary = $"{job.SalaryMin:N0} - {job.SalaryMax:N0} TL",
+                            skills = job.RequiredSkills,
+                            url = $"/JobPosting/Details/{job.Id}"
+                        }).ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "İş eşleştirme sırasında hata");
+                    }
+                }
+
+                return Json(new { 
+                    success = true, 
+                    response = analysis,
+                    jobRecommendations = matchingJobs
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "CV analizi sırasında hata: {Message}", ex.Message);
+                return Json(new { success = false, error = "Bir hata oluştu: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveAnalysisToChat()
+        {
+            try
+            {
+                // Session'dan analiz sonucunu al
+                var analysisResult = HttpContext.Session.GetString("LastAnalysis");
+                if (string.IsNullOrEmpty(analysisResult))
+                {
+                    return Json(new { success = false, error = "Analiz sonucu bulunamadı." });
+                }
+
+                // Kullanıcı mesajını kaydet
+                var userMessage = new ChatMessage
+                {
+                    Content = "CV Analizi Talebi",
+                    IsFromBot = false,
+                    CreatedDate = DateTime.Now,
+                    UserId = 1
+                };
+                
+                await _chatMessageService.AddAsync(userMessage);
+
+                // Bot yanıtını kaydet
+                var botMessage = new ChatMessage
+                {
+                    Content = analysisResult,
+                    IsFromBot = true,
+                    CreatedDate = DateTime.Now,
+                    UserId = 1
+                };
+                
+                await _chatMessageService.AddAsync(botMessage);
+
+                // Session'dan temizle
+                HttpContext.Session.Remove("LastAnalysis");
+
+                return Json(new { success = true, response = analysisResult });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Analiz sohbete kaydedilirken hata: {Message}", ex.Message);
+                return Json(new { success = false, error = "Bir hata oluştu: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetChatMessages()
+        {
+            try
+            {
+                var messages = _chatMessageService.TGetList()
+                    .Where(m => m.UserId == 1) // Şimdilik sabit user ID
+                    .OrderBy(m => m.CreatedDate)
+                    .Select(m => new
+                    {
+                        content = m.Content,
+                        isFromBot = m.IsFromBot,
+                        createdDate = m.CreatedDate
+                    })
+                    .ToList();
+
+                return Json(new { success = true, messages = messages });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mesajlar alınırken hata: {Message}", ex.Message);
                 return Json(new { success = false, error = "Bir hata oluştu: " + ex.Message });
             }
         }
