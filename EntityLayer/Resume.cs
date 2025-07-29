@@ -22,6 +22,9 @@ namespace EntityLayer
         [Required]
         public string FilePath { get; set; }
 
+        [StringLength(255)]
+        public string FileName { get; set; }
+
         public string ParsedContent { get; set; }
 
         [StringLength(500)]

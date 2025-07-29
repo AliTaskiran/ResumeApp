@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.Concrete
 {
-    internal class JobApplicationManager : IJobApplicationService
+    public class JobApplicationManager : IJobApplicationService
     {
         IJobApplicationDal _jobApplicationDal;
 

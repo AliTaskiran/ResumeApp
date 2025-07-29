@@ -271,19 +271,40 @@
 
         async function sendAnalysisToChat(analysisText) {
             try {
-                // Yeni endpoint'i kullan (CSRF token gerektirmeyen)
-                const response = await fetch('/Home/SaveAnalysisToChat', {
+                console.log('Analiz sohbete gönderiliyor:', analysisText);
+                
+                // CV analiz sonucunu direkt sohbete gönder
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                
+                // Önce kullanıcı mesajını ekle
+                const userResponse = await fetch('/Home/SendMessage', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        content: 'CV analiz sonucumu göster'
+                    })
                 });
 
-                console.log('Sohbete gönderim response:', response.status);
-                const data = await response.json();
+                // Sonra analiz sonucunu bot mesajı olarak ekle
+                const botResponse = await fetch('/Home/SendMessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        content: '📊 CV Analizi Tamamlandı!\n\n' + analysisText
+                    })
+                });
+
+                console.log('Sohbete gönderim response:', botResponse.status);
+                const data = await botResponse.json();
                 console.log('Sohbete gönderim data:', data);
 
-                if (response.ok && data.success) {
+                if (botResponse.ok && data.success) {
                     console.log('Analiz sohbete başarıyla gönderildi');
                     
                     // Ana sayfaya yönlendir ve sohbeti aç

@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using BusinessLayer.Abstract;
 using BusinessLayer.Concrete;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ResumeApp.Controllers
 {
+    [Authorize(Roles = "Candidate")]
     public class HomeController : Controller
     {
         private readonly IChatMessageService _chatMessageService;
@@ -14,6 +16,8 @@ namespace ResumeApp.Controllers
         private readonly IChatbotService _chatbotService;
         private readonly IAIService _aiService;
         private readonly IMatchingService _matchingService;
+        private readonly IJobApplicationService _jobApplicationService;
+        private readonly IJobPostingService _jobPostingService;
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(
@@ -22,6 +26,8 @@ namespace ResumeApp.Controllers
             IChatbotService chatbotService,
             IAIService aiService,
             IMatchingService matchingService,
+            IJobApplicationService jobApplicationService,
+            IJobPostingService jobPostingService,
             ILogger<HomeController> logger)
         {
             _chatMessageService = chatMessageService;
@@ -29,13 +35,78 @@ namespace ResumeApp.Controllers
             _chatbotService = chatbotService;
             _aiService = aiService;
             _matchingService = matchingService;
+            _jobApplicationService = jobApplicationService;
+            _jobPostingService = jobPostingService;
             _logger = logger;
         }
 
         public IActionResult Index()
         {
             _logger.LogInformation("Index sayfası çağrıldı");
+            
+            // Kullanıcının başvuru durumlarını getir
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId > 0)
+            {
+                var userApplications = _jobApplicationService.TGetList()
+                    .Where(ja => ja.UserId == userId)
+                    .OrderByDescending(ja => ja.CreatedDate)
+                    .Take(5) // Son 5 başvuru
+                    .Select(ja => new
+                    {
+                        ApplicationId = ja.Id,
+                        JobTitle = _jobPostingService.TGetById(ja.JobPostingId)?.Title ?? "İş İlanı Bulunamadı",
+                        CompanyName = _jobPostingService.TGetById(ja.JobPostingId)?.CompanyName ?? "Şirket Bulunamadı",
+                        ApplicationDate = ja.CreatedDate,
+                        Status = ja.Status,
+                        StatusText = GetStatusText(ja.Status)
+                    })
+                    .Cast<object>()
+                    .ToList();
+
+                ViewBag.UserApplications = userApplications;
+            }
+            
             return View();
+        }
+        
+        private string GetStatusText(int status)
+        {
+            return status switch
+            {
+                0 => "Beklemede",
+                1 => "İnceleniyor",
+                2 => "Kabul Edildi",
+                3 => "Reddedildi",
+                _ => "Bilinmiyor"
+            };
+        }
+
+        public IActionResult MyApplications()
+        {
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            var userApplications = _jobApplicationService.TGetList()
+                .Where(ja => ja.UserId == userId)
+                .OrderByDescending(ja => ja.CreatedDate)
+                .Select(ja => new
+                {
+                    ApplicationId = ja.Id,
+                    JobTitle = _jobPostingService.TGetById(ja.JobPostingId)?.Title ?? "İş İlanı Bulunamadı",
+                    CompanyName = _jobPostingService.TGetById(ja.JobPostingId)?.CompanyName ?? "Şirket Bulunamadı",
+                    ApplicationDate = ja.CreatedDate,
+                    Status = ja.Status,
+                    StatusText = GetStatusText(ja.Status),
+                    JobPosting = _jobPostingService.TGetById(ja.JobPostingId)
+                })
+                .Cast<object>()
+                .ToList();
+
+            return View(userApplications);
         }
 
         [HttpPost]
@@ -58,6 +129,13 @@ namespace ResumeApp.Controllers
                     return BadRequest(new { success = false, error = "Mesaj boş olamaz." });
                 }
 
+                // Giriş yapan kullanıcının ID'sini al
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                if (userId == 0)
+                {
+                    return Json(new { success = false, error = "Kullanıcı kimliği bulunamadı. Lütfen tekrar giriş yapın." });
+                }
+
                 _logger.LogInformation("Kullanıcı mesajı kaydediliyor: {Content}", request.Content);
                 
                 // Kullanıcı mesajını kaydet
@@ -66,7 +144,7 @@ namespace ResumeApp.Controllers
                     Content = request.Content,
                     IsFromBot = false,
                     CreatedDate = DateTime.Now,
-                    UserId = 1 // Şimdilik sabit
+                    UserId = userId
                 };
                 
                 var savedUserMessage = await _chatMessageService.AddAsync(userMessage);
@@ -83,7 +161,7 @@ namespace ResumeApp.Controllers
                     Content = response,
                     IsFromBot = true,
                     CreatedDate = DateTime.Now,
-                    UserId = 1 // Şimdilik sabit
+                    UserId = userId
                 };
                 
                 var savedBotMessage = await _chatMessageService.AddAsync(botMessage);
@@ -191,13 +269,20 @@ namespace ResumeApp.Controllers
                     return Json(new { success = false, error = "Analiz sonucu bulunamadı." });
                 }
 
+                // Giriş yapan kullanıcının ID'sini al
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                if (userId == 0)
+                {
+                    return Json(new { success = false, error = "Kullanıcı kimliği bulunamadı. Lütfen tekrar giriş yapın." });
+                }
+
                 // Kullanıcı mesajını kaydet
                 var userMessage = new ChatMessage
                 {
                     Content = "CV Analizi Talebi",
                     IsFromBot = false,
                     CreatedDate = DateTime.Now,
-                    UserId = 1
+                    UserId = userId
                 };
                 
                 await _chatMessageService.AddAsync(userMessage);
@@ -208,7 +293,7 @@ namespace ResumeApp.Controllers
                     Content = analysisResult,
                     IsFromBot = true,
                     CreatedDate = DateTime.Now,
-                    UserId = 1
+                    UserId = userId
                 };
                 
                 await _chatMessageService.AddAsync(botMessage);
@@ -230,8 +315,14 @@ namespace ResumeApp.Controllers
         {
             try
             {
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                if (userId == 0)
+                {
+                    return Json(new { success = true, messages = new List<object>() });
+                }
+
                 var messages = _chatMessageService.TGetList()
-                    .Where(m => m.UserId == 1) // Şimdilik sabit user ID
+                    .Where(m => m.UserId == userId)
                     .OrderBy(m => m.CreatedDate)
                     .Select(m => new
                     {

@@ -4,6 +4,7 @@ using EntityLayer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ using System.Collections.Generic; // Added for List<JobPosting>
 
 namespace ResumeApp.Controllers
 {
+    [Authorize(Roles = "Candidate")]
     public class ResumeController : Controller
     {
         private readonly IResumeService _resumeService;
@@ -34,8 +36,13 @@ namespace ResumeApp.Controllers
 
         public IActionResult Index()
         {
-            // Şimdilik UserId'yi 1 olarak alıyoruz, daha sonra login sisteminden alınacak
-            var userId = 1;
+            // Giriş yapan kullanıcının ID'sini al
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
             var resumes = _resumeService.TGetList()
                 .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedDate)
@@ -82,14 +89,23 @@ namespace ResumeApp.Controllers
                     await pdfFile.CopyToAsync(stream);
                 }
 
+                // Giriş yapan kullanıcının ID'sini al
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                if (userId == 0)
+                {
+                    ModelState.AddModelError("", "Kullanıcı kimliği bulunamadı. Lütfen tekrar giriş yapın.");
+                    return View(new Resume());
+                }
+
                 // Resume nesnesini oluştur
                 var resume = new Resume
                 {
                     Title = Path.GetFileNameWithoutExtension(pdfFile.FileName),
                     FilePath = fileName,
+                    FileName = pdfFile.FileName, // Orijinal dosya adı
                     CreatedDate = DateTime.Now,
                     IsActive = true,
-                    UserId = 1, // Şimdilik sabit
+                    UserId = userId, // Giriş yapan kullanıcının ID'si
                     Skills = "", // Boş string olarak başlat
                     Experience = "0", // Default değer
                     Education = "", // Boş string olarak başlat
@@ -177,7 +193,12 @@ namespace ResumeApp.Controllers
 
         public async Task<IActionResult> SetMainResume(int id)
         {
-            var userId = 1; // Şimdilik sabit
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+            
             var resume = await _resumeService.GetByIdAsync(id);
 
             if (resume == null || resume.UserId != userId)
@@ -206,7 +227,12 @@ namespace ResumeApp.Controllers
 
         public IActionResult Delete(int id)
         {
-            var userId = 1; // Şimdilik sabit
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+            
             var resume = _resumeService.TGetById(id);
 
             if (resume == null || resume.UserId != userId)
@@ -230,8 +256,13 @@ namespace ResumeApp.Controllers
         [HttpGet]
         public IActionResult GetUserCVs()
         {
-            // Şimdilik sabit kullanıcı ID'si
-            var userId = 1;
+            // Giriş yapan kullanıcının ID'sini al
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return Json(new List<object>());
+            }
+
             var resumes = _resumeService.TGetList()
                 .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedDate)

@@ -31,6 +31,104 @@
         </div>
     </div>
 
+    @{
+        var applications = ViewBag.UserApplications as List<object>;
+    }
+
+    @if (applications != null && applications.Any())
+    {
+        <!-- Başvuru Durumları Section -->
+        <div class="py-12 bg-gradient-to-r from-green-50 to-blue-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold text-gray-900">
+                        🎯 Başvuru Durumlarınız
+                    </h2>
+                    <p class="mt-4 text-lg text-gray-600">
+                        Son başvurularınızın durumunu takip edin
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach (dynamic application in applications)
+                    {
+                        var statusClass = application.Status == 0 ? "bg-yellow-100 border-yellow-200 text-yellow-800" :
+                                         application.Status == 1 ? "bg-blue-100 border-blue-200 text-blue-800" :
+                                         application.Status == 2 ? "bg-green-100 border-green-200 text-green-800" :
+                                         "bg-red-100 border-red-200 text-red-800";
+                        
+                        var statusIcon = application.Status == 0 ? "⏳" :
+                                        application.Status == 1 ? "👀" :
+                                        application.Status == 2 ? "🎉" :
+                                        "❌";
+                        
+                        var statusBgClass = application.Status == 0 ? "bg-yellow-500" :
+                                           application.Status == 1 ? "bg-blue-500" :
+                                           application.Status == 2 ? "bg-green-500" :
+                                           "bg-red-500";
+                        
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            <div class="@statusBgClass h-2"></div>
+                            <div class="p-6">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                            @application.JobTitle
+                                        </h3>
+                                        <p class="text-gray-600 mb-3">
+                                            <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h10M7 15h10"></path>
+                                            </svg>
+                                            @application.CompanyName
+                                        </p>
+                                        <p class="text-sm text-gray-500 mb-4">
+                                            <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V7a2 2 0 012-2h4a2 2 0 012 2v0M8 7v13a2 2 0 002 2h4a2 2 0 002-2V7"></path>
+                                            </svg>
+                                            @((DateTime)application.ApplicationDate).ToString("dd.MM.yyyy")
+                                        </p>
+                                    </div>
+                                    <div class="text-2xl ml-4">
+                                        @statusIcon
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium @statusClass">
+                                        @application.StatusText
+                                    </span>
+                                    
+                                    @if (application.Status == 2)
+                                    {
+                                        <div class="text-sm text-green-600 font-medium">
+                                            🎊 Tebrikler!
+                                        </div>
+                                    }
+                                    else if (application.Status == 3)
+                                    {
+                                        <div class="text-sm text-gray-500">
+                                            💪 Vazgeçmeyin!
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Tüm Başvuruları Görme Linki -->
+                <div class="mt-8 text-center">
+                    <a href="@Url.Action("MyApplications")" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 shadow-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Tüm Başvurularımı Görüntüle
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
     <!-- Features Section -->   
     <div class="py-12 bg-white" id="nasil-calisir">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -4,11 +4,24 @@ using BusinessLayer.Abstract;
 using BusinessLayer.Concrete;
 using DataAccessLayer.Abstract;
 using DataAccessLayer.EntityFramework;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Authentication ekle
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login/Index";
+        options.LogoutPath = "/Login/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
 
 // Session desteği ekle
 builder.Services.AddSession(options =>
@@ -40,6 +53,14 @@ builder.Services.AddScoped<IMatchingService, MatchingService>();
 builder.Services.AddScoped<IJobPostingService, JobPostingManager>();
 builder.Services.AddScoped<IJobPostingDal, EfJobPostingDal>();
 
+// User servisleri
+builder.Services.AddScoped<IUserService, UserManager>();
+builder.Services.AddScoped<IUserDal, EfUserDal>();
+
+// Job Application servisleri
+builder.Services.AddScoped<IJobApplicationService, JobApplicationManager>();
+builder.Services.AddScoped<IJobApplicationDal, EfJobApplicationDal>();
+
 // Tüm servis kayıtlarından SONRA app.Build() çağrılmalı
 var app = builder.Build();
 
@@ -58,10 +79,12 @@ app.UseRouting();
 // Session middleware'ini ekle
 app.UseSession();
 
+// Authentication ve Authorization ekle
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 app.Run();

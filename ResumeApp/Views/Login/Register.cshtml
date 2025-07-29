@@ -1,0 +1,179 @@
+@model EntityLayer.User
+@{
+    ViewData["Title"] = "Kayıt Ol";
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
+                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Hesap Oluşturun
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Zaten hesabınız var mı?
+                <a href="@Url.Action("Index", "Login")" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Giriş yapın
+                </a>
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <!-- Kullanıcı Tipi Seçimi -->
+            <div class="flex mb-6">
+                <button type="button" id="candidateBtn" class="flex-1 py-3 px-4 text-center border-b-2 border-indigo-500 text-indigo-600 font-medium user-type-btn active">
+                    <div class="flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Aday Kaydı
+                    </div>
+                </button>
+                <button type="button" id="employerBtn" class="flex-1 py-3 px-4 text-center border-b-2 border-gray-200 text-gray-500 font-medium user-type-btn">
+                    <div class="flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h10M7 15h10"></path>
+                        </svg>
+                        İşveren Kaydı
+                    </div>
+                </button>
+            </div>
+
+            <form asp-action="Register" method="post" class="space-y-6">
+                <input type="hidden" id="userType" name="userType" value="candidate" />
+                
+                @if (ViewData.ModelState.Count > 0)
+                {
+                    <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                        <div class="text-sm text-red-600">
+                            @Html.ValidationSummary(false, "", new { @class = "text-red-600" })
+                        </div>
+                    </div>
+                }
+
+                <!-- Kişisel Bilgiler -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label asp-for="FirstName" class="block text-sm font-medium text-gray-700">Ad</label>
+                        <input asp-for="FirstName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Adınız" required>
+                        <span asp-validation-for="FirstName" class="text-red-600 text-sm"></span>
+                    </div>
+                    <div>
+                        <label asp-for="LastName" class="block text-sm font-medium text-gray-700">Soyad</label>
+                        <input asp-for="LastName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Soyadınız" required>
+                        <span asp-validation-for="LastName" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label asp-for="Email" class="block text-sm font-medium text-gray-700">Email Adresi</label>
+                    <input asp-for="Email" type="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email adresiniz" required>
+                    <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Password" class="block text-sm font-medium text-gray-700">Şifre</label>
+                    <input asp-for="Password" type="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Şifreniz" required>
+                    <span asp-validation-for="Password" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700">Telefon Numarası</label>
+                    <input asp-for="PhoneNumber" type="tel" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Telefon numaranız">
+                    <span asp-validation-for="PhoneNumber" class="text-red-600 text-sm"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Location" class="block text-sm font-medium text-gray-700">Lokasyon</label>
+                    <input asp-for="Location" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Şehir/İl">
+                    <span asp-validation-for="Location" class="text-red-600 text-sm"></span>
+                </div>
+
+                <!-- İşveren İçin Ek Alanlar -->
+                <div id="employerFields" style="display: none;">
+                    <div>
+                        <label asp-for="CompanyName" class="block text-sm font-medium text-gray-700">Şirket Adı <span class="text-red-500">*</span></label>
+                        <input asp-for="CompanyName" id="companyNameInput" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Şirket adı">
+                        <span asp-validation-for="CompanyName" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="CompanyDescription" class="block text-sm font-medium text-gray-700">Şirket Açıklaması</label>
+                        <textarea asp-for="CompanyDescription" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Şirket hakkında kısa açıklama"></textarea>
+                        <span asp-validation-for="CompanyDescription" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="CompanyWebsite" class="block text-sm font-medium text-gray-700">Şirket Website</label>
+                        <input asp-for="CompanyWebsite" type="url" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="https://www.sirket.com">
+                        <span asp-validation-for="CompanyWebsite" class="text-red-600 text-sm"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </span>
+                        Hesap Oluştur
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const candidateBtn = document.getElementById('candidateBtn');
+        const employerBtn = document.getElementById('employerBtn');
+        const userTypeInput = document.getElementById('userType');
+        const employerFields = document.getElementById('employerFields');
+
+        candidateBtn.addEventListener('click', function() {
+            setActiveButton('candidate');
+        });
+
+        employerBtn.addEventListener('click', function() {
+            setActiveButton('employer');
+        });
+
+        function setActiveButton(type) {
+            // Reset all buttons
+            document.querySelectorAll('.user-type-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+                btn.classList.add('border-gray-200', 'text-gray-500');
+            });
+
+            const companyNameInput = document.getElementById('companyNameInput');
+
+            // Set active button and show/hide fields
+            if (type === 'candidate') {
+                candidateBtn.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+                candidateBtn.classList.remove('border-gray-200', 'text-gray-500');
+                userTypeInput.value = 'candidate';
+                employerFields.style.display = 'none';
+                // CompanyName alanını required olmaktan çıkar
+                if (companyNameInput) {
+                    companyNameInput.removeAttribute('required');
+                }
+            } else {
+                employerBtn.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+                employerBtn.classList.remove('border-gray-200', 'text-gray-500');
+                userTypeInput.value = 'employer';
+                employerFields.style.display = 'block';
+                // CompanyName alanını required yap
+                if (companyNameInput) {
+                    companyNameInput.setAttribute('required', 'required');
+                }
+            }
+        }
+    });
+</script> 

@@ -89,15 +89,99 @@
                                 Son Başvuru: @Model.ExpiryDate?.ToString("dd MMMM yyyy")
                             </p>
                         </div>
-                        <div class="flex space-x-4">
-                            <a href="@Url.Action("Upload", "Resume")" 
-                               class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                        @if (User.IsInRole("Candidate"))
+                        {
+                            <div class="flex space-x-4" id="applicationButtons">
+                                <!-- Loading durumu -->
+                                <div id="loadingButton" class="inline-flex items-center px-4 py-2 border border-gray-300 text-base font-medium rounded-md text-gray-500 bg-gray-100">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Kontrol ediliyor...
+                                </div>
+                                
+                                <!-- CV'si olan kullanıcılar için başvur butonu -->
+                                <form id="applyForm" method="post" action="@Url.Action("Apply", "JobPosting")" style="display: none;">
+                                    <input type="hidden" name="jobId" value="@Model.Id" />
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Başvur
+                                    </button>
+                                </form>
+                                
+                                <!-- CV'si olmayan kullanıcılar için CV yükle butonu -->
+                                <a id="uploadButton" href="@Url.Action("Upload", "Resume", new { returnUrl = Url.Action("Details", "JobPosting", new { id = Model.Id }) })" 
+                                   class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700" style="display: none;">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
                                 CV Yükle ve Başvur
                             </a>
+                                
+                                <!-- Zaten başvuru yapmış kullanıcılar için -->
+                                <button id="appliedButton" disabled class="inline-flex items-center px-4 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-500 bg-gray-100 cursor-not-allowed" style="display: none;">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Başvuru Yapıldı
+                                </button>
+                            </div>
+                        }
+                        else if (User.IsInRole("Employer"))
+                        {
+                            <div class="text-sm text-gray-500">
+                                İşveren olarak bu ilana başvuru yapamazsınız.
                         </div>
+                        }
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div> 
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    @if (User.IsInRole("Candidate"))
+    {
+        <text>
+        // Başvuru durumunu kontrol et
+        fetch('@Url.Action("CheckApplyStatus", "JobPosting")?jobId=@Model.Id')
+            .then(response => response.json())
+            .then(data => {
+                const loadingButton = document.getElementById('loadingButton');
+                const applyForm = document.getElementById('applyForm');
+                const uploadButton = document.getElementById('uploadButton');
+                const appliedButton = document.getElementById('appliedButton');
+                
+                // Loading butonunu gizle
+                loadingButton.style.display = 'none';
+                
+                if (data.hasApplied) {
+                    // Zaten başvuru yapılmış
+                    appliedButton.style.display = 'block';
+                } else if (data.hasCV) {
+                    // CV var, başvuru yapabilir
+                    applyForm.style.display = 'block';
+                } else {
+                    // CV yok, önce CV yüklemeli
+                    uploadButton.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Başvuru durumu kontrol edilirken hata:', error);
+                
+                // Hata durumunda CV yükle butonunu göster
+                const loadingButton = document.getElementById('loadingButton');
+                const uploadButton = document.getElementById('uploadButton');
+                
+                loadingButton.style.display = 'none';
+                uploadButton.style.display = 'block';
+            });
+        </text>
+    }
+});
+</script> 
