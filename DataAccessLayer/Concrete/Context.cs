@@ -35,7 +35,6 @@ namespace DataAccessLayer.Concrete
         public DbSet<Resume> Resumes { get; set; }
         public DbSet<JobPosting> JobPostings { get; set; }
         public DbSet<JobApplication> JobApplications { get; set; }
-        public DbSet<MatchHistory> MatchHistories { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,7 +44,6 @@ namespace DataAccessLayer.Concrete
             modelBuilder.Entity<Resume>().ToTable("Resumes");
             modelBuilder.Entity<JobPosting>().ToTable("JobPostings");
             modelBuilder.Entity<JobApplication>().ToTable("JobApplications");
-            modelBuilder.Entity<MatchHistory>().ToTable("MatchHistories");
             modelBuilder.Entity<ChatMessage>().ToTable("ChatMessages");
 
             // Decimal tipleri için hassasiyet ayarları
@@ -86,18 +84,6 @@ namespace DataAccessLayer.Concrete
                 .HasOne<Resume>()
                 .WithMany()
                 .HasForeignKey(ja => ja.ResumeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<MatchHistory>()
-                .HasOne<Resume>()
-                .WithMany()
-                .HasForeignKey(mh => mh.ResumeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<MatchHistory>()
-                .HasOne<JobPosting>()
-                .WithMany()
-                .HasForeignKey(mh => mh.JobPostingId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ChatMessage>()

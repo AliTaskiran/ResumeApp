@@ -3,6 +3,8 @@ using EntityLayer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.IO;
+using System.Linq;
 
 namespace ResumeApp.Controllers
 {
@@ -188,23 +190,46 @@ namespace ResumeApp.Controllers
 
         public IActionResult ViewResume(int resumeId)
         {
-            var resume = _resumeService.TGetById(resumeId);
-            if (resume == null)
+            try
             {
-                return NotFound();
-            }
+                var resume = _resumeService.TGetById(resumeId);
+                if (resume == null)
+                {
+                    TempData["ErrorMessage"] = "CV bulunamadı.";
+                    return RedirectToAction("Applications");
+                }
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", resume.FilePath);
-            
-            if (!System.IO.File.Exists(filePath))
+                // Güvenlik kontrolü: Bu CV'nin sahibi bu işverenin iş ilanına başvurmuş mu?
+                var companyName = User.FindFirstValue("CompanyName");
+                var hasApplication = _jobApplicationService.TGetList()
+                    .Any(ja => ja.ResumeId == resumeId && 
+                           _jobPostingService.TGetById(ja.JobPostingId).CompanyName == companyName);
+
+                if (!hasApplication)
+                {
+                    TempData["ErrorMessage"] = "Bu CV'ye erişim yetkiniz yok.";
+                    return RedirectToAction("Applications");
+                }
+
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", resume.FilePath);
+                
+                if (!System.IO.File.Exists(filePath))
+                {
+                    TempData["ErrorMessage"] = "CV dosyası bulunamadı.";
+                    return RedirectToAction("Applications");
+                }
+
+                var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                var downloadFileName = (!string.IsNullOrEmpty(resume.FileName) ? resume.FileName : resume.FilePath);
+                
+                // PDF dosyasını tarayıcıda göster
+                return File(fileBytes, "application/pdf", downloadFileName);
+            }
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "CV dosyası bulunamadı.";
+                TempData["ErrorMessage"] = "CV görüntülenirken bir hata oluştu: " + ex.Message;
                 return RedirectToAction("Applications");
             }
-
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            var downloadFileName = (!string.IsNullOrEmpty(resume.FileName) ? resume.FileName : resume.FilePath);
-            return File(fileBytes, "application/pdf", downloadFileName);
         }
     }
 } 
