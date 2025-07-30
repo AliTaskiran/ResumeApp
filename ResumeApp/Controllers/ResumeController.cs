@@ -21,17 +21,20 @@ namespace ResumeApp.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IAIService _aiService;
         private readonly IMatchingService _matchingService;
+        private readonly IJobApplicationService _jobApplicationService;
 
         public ResumeController(
             IResumeService resumeService,
             IWebHostEnvironment webHostEnvironment,
             IAIService aiService,
-            IMatchingService matchingService)
+            IMatchingService matchingService,
+            IJobApplicationService jobApplicationService)
         {
             _resumeService = resumeService;
             _webHostEnvironment = webHostEnvironment;
             _aiService = aiService;
             _matchingService = matchingService;
+            _jobApplicationService = jobApplicationService;
         }
 
         public IActionResult Index()
@@ -240,16 +243,35 @@ namespace ResumeApp.Controllers
                 return NotFound();
             }
 
-            // Dosyayı sil
-            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", resume.FilePath);
-            if (System.IO.File.Exists(filePath))
+            try
             {
-                System.IO.File.Delete(filePath);
+                // Önce bu CV'ye ait tüm iş başvurularını sil
+                var jobApplications = _jobApplicationService.TGetList()
+                    .Where(ja => ja.ResumeId == id)
+                    .ToList();
+                
+                foreach (var application in jobApplications)
+                {
+                    _jobApplicationService.TDelete(application);
+                }
+
+                // Dosyayı sil
+                var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", resume.FilePath);
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                // Son olarak CV'yi sil
+                _resumeService.TDelete(resume);
+
+                TempData["SuccessMessage"] = "CV ve ilgili başvurular başarıyla silindi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "CV silinirken bir hata oluştu: " + ex.Message;
             }
 
-            _resumeService.TDelete(resume);
-
-            TempData["SuccessMessage"] = "CV başarıyla silindi.";
             return RedirectToAction("Index");
         }
 

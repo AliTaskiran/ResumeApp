@@ -152,7 +152,7 @@ namespace ResumeApp.Controllers
 
                 _logger.LogInformation("Chatbot'tan yanıt alınıyor...");
                 // Chatbot'tan yanıt al
-                var response = await _chatbotService.GetResponseAsync(request.Content);
+                var response = await _chatbotService.GetResponseAsync(request.Content, userId);
                 _logger.LogInformation("Chatbot yanıtı alındı. Uzunluk: {Length}", response?.Length ?? 0);
 
                 // Bot yanıtını kaydet
@@ -213,8 +213,11 @@ namespace ResumeApp.Controllers
                             $"Eğitim: {resume.Education}\n" +
                             $"İçerik: {resume.ParsedContent}";
 
+                // Giriş yapan kullanıcının ID'sini al (AnalyzeCV için de)
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                
                 _logger.LogInformation("Chatbot'tan CV analizi isteniyor");
-                var analysis = await _chatbotService.GetResponseAsync(message);
+                var analysis = await _chatbotService.GetResponseAsync(message, userId);
                 _logger.LogInformation("Chatbot CV analizi yanıtı alındı. Uzunluk: {Length}", analysis?.Length ?? 0);
 
                 // Analiz sonucunu Session'a kaydet

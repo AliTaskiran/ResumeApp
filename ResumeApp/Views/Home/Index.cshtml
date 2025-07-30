@@ -365,25 +365,21 @@
             const message = messageInput.value.trim();
             
             if (!message) {
-                console.log('Mesaj boş, gönderilmiyor');
                 return;
             }
 
             try {
-                console.log('Mesaj gönderiliyor:', message);
-                
-                // Kullanıcı mesajını göster
-                appendMessage(message, false);
+                // Input'u temizle
                 messageInput.value = '';
 
                 const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-                console.log('CSRF Token:', token);
 
                 const response = await fetch('/Home/SendMessage', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': token
                     },
                     body: JSON.stringify({
                         content: message,
@@ -391,12 +387,13 @@
                     })
                 });
 
-                console.log('Response status:', response.status);
                 const data = await response.json();
-                console.log('Response data:', data);
                 
                 if (data.success) {
-                    appendMessage(data.response, true);
+                    // Veritabanından tüm mesajları yeniden yükle
+                    setTimeout(() => {
+                        loadChatMessages();
+                    }, 200); // Kısa bir delay ile veritabanına kayıt tamamlanana kadar bekle
                 } else {
                     appendMessage('Üzgünüm, bir hata oluştu: ' + (data.error || 'Bilinmeyen hata'), true);
                 }
@@ -409,7 +406,6 @@
         // Global fonksiyon - diğer sayfalardan çağrılabilir
         function updateChatMessages() {
             // Sohbet mesajlarını yenile
-            console.log('Sohbet mesajları güncelleniyor...');
             loadChatMessages();
         }
 
@@ -439,8 +435,6 @@
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Sayfa yüklendi, event listener\'lar ekleniyor...');
-            
             // Mevcut mesajları yükle
             loadChatMessages();
             
@@ -456,13 +450,9 @@
             const messageInput = document.getElementById('messageInput');
             const sendButton = document.getElementById('sendButton');
 
-            console.log('Mesaj input alanı:', messageInput);
-            console.log('Gönder butonu:', sendButton);
-
             if (messageInput) {
                 messageInput.addEventListener('keypress', function(event) {
                     if (event.key === 'Enter') {
-                        console.log('Enter tuşuna basıldı');
                         event.preventDefault();
                         sendMessage();
                     }
@@ -470,9 +460,7 @@
             }
 
             if (sendButton) {
-                console.log('Gönder butonu bulundu, click event\'i ekleniyor...');
                 sendButton.addEventListener('click', function(event) {
-                    console.log('Gönder butonuna tıklandı');
                     event.preventDefault();
                     sendMessage();
                 });

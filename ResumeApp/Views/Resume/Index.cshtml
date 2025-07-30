@@ -22,6 +22,23 @@
             </div>
         }
 
+        <!-- Error Message -->
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="mb-8 bg-red-50 border-l-4 border-red-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">@TempData["ErrorMessage"]</p>
+                    </div>
+                </div>
+            </div>
+        }
+
         <!-- Header -->
         <div class="mb-8 flex justify-between items-center">
             <div>
@@ -88,7 +105,7 @@
                                                 </a>
                                             }
                                             <a href="@Url.Action("Delete", new { id = resume.Id })" 
-                                               onclick="return confirm('CV silinecek. Emin misiniz?')"
+                                               onclick="return confirm('⚠️ UYARI: Bu CV ve ona ait tüm iş başvurularınız silinecek!\n\nBu işlem geri alınamaz. Emin misiniz?')"
                                                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
                                                 Sil
                                             </a>
@@ -172,8 +189,6 @@
     </style>
     <script>
         async function analyzeCV(cvId) {
-            console.log('CV analizi başlatılıyor...', cvId);
-            
             const modal = document.getElementById('analysisModal');
             const content = document.getElementById('analysisContent');
             const jobRecommendations = document.getElementById('jobRecommendations');
@@ -183,7 +198,6 @@
 
             try {
                 const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-                console.log('CSRF Token:', token);
 
                 const response = await fetch('/Home/AnalyzeCV', {
                     method: 'POST',
@@ -196,9 +210,7 @@
                     })
                 });
 
-                console.log('API yanıtı alındı:', response.status);
                 const data = await response.json();
-                console.log('API yanıt detayı:', data);
 
                 if (data.success) {
                     content.textContent = data.response;
@@ -271,8 +283,6 @@
 
         async function sendAnalysisToChat(analysisText) {
             try {
-                console.log('Analiz sohbete gönderiliyor:', analysisText);
-                
                 // CV analiz sonucunu direkt sohbete gönder
                 const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
                 
@@ -300,19 +310,13 @@
                     })
                 });
 
-                console.log('Sohbete gönderim response:', botResponse.status);
                 const data = await botResponse.json();
-                console.log('Sohbete gönderim data:', data);
 
                 if (botResponse.ok && data.success) {
-                    console.log('Analiz sohbete başarıyla gönderildi');
-                    
                     // Ana sayfaya yönlendir ve sohbeti aç
                     setTimeout(() => {
                         window.location.href = '/Home/Index?openChat=true';
                     }, 2000);
-                } else {
-                    console.error('Sohbete gönderim başarısız:', data);
                 }
             } catch (error) {
                 console.error('Analiz sohbete gönderilirken hata:', error);

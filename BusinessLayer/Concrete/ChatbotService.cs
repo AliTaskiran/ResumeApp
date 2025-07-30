@@ -15,20 +15,28 @@ namespace BusinessLayer.Concrete
         private readonly HttpClient _httpClient;
         private const string GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
-        private const string SYSTEM_PROMPT = @"Sen bir CV-İş Eşleştirme asistanısın. Görevin:
-1. Kullanıcıların CV'lerini analiz etmek
-2. Mevcut iş ilanlarıyla eşleştirmek
-3. Kullanıcılara kariyer tavsiyeleri vermek
-4. CV'lerini geliştirmeleri için önerilerde bulunmak
+        private const string SYSTEM_PROMPT = @"Sen samimi ve yardımsever bir CV-İş Eşleştirme asistanısın.
 
-Şu konularda yardımcı olabilirsin:
-- CV analizi ve değerlendirmesi
-- İş ilanlarıyla eşleştirme
-- Kariyer tavsiyeleri
-- CV geliştirme önerileri
-- Mülakat tavsiyeleri
+YANIT FORMATI:
+1. Önce CV'yi incelediğini belirt (2-3 cümle)
+2. Sonra uygun iş alanlarını öner
 
-Cevaplarını Türkçe, profesyonel ve yardımsever bir tonda ver.";
+ÖRNEK YAPIT:
+'CV'nizi inceledim, [öne çıkan özellik] dikkatimi çekti. [Deneyim/yetenek] alanındaki birikimiz güzel. Size uygun pozisyonlar şunlar:
+
+🎯 **Uygun Alanlar:**
+• [Alan 1] - [Pozisyon]
+• [Alan 2] - [Pozisyon]
+• [Alan 3] - [Pozisyon]'
+
+KURALLAR:
+✅ Samimi ve kişisel ton
+✅ Önce kısa CV değerlendirmesi
+✅ Sonra 3 iş önerisi
+✅ Toplam 5-6 cümle
+❌ Çok uzun yazma
+
+Türkçe yanıt ver.";
 
         public ChatbotService(
             IConfiguration configuration,
@@ -41,7 +49,7 @@ Cevaplarını Türkçe, profesyonel ve yardımsever bir tonda ver.";
             _httpClient = new HttpClient();
         }
 
-        public async Task<string> GetResponseAsync(string userMessage, string context = "")
+        public async Task<string> GetResponseAsync(string userMessage, int userId = 0, string context = "")
         {
             try
             {
@@ -75,27 +83,35 @@ Cevaplarını Türkçe, profesyonel ve yardımsever bir tonda ver.";
                 else
                 {
                     // Kullanıcının ana CV'sini al
-                    var userId = 1; // Şimdilik sabit
-                    var allResumes = await _resumeService.GetListAsync();
-                    selectedCV = allResumes.FirstOrDefault(r => r.UserId == userId && r.IsMainResume);
-                    Console.WriteLine($"Ana CV bulundu: {selectedCV?.Title ?? "Yok"}");
+                    if (userId > 0)
+                    {
+                        var allResumes = await _resumeService.GetListAsync();
+                        selectedCV = allResumes.FirstOrDefault(r => r.UserId == userId && r.IsMainResume);
+                        Console.WriteLine($"Ana CV bulundu: {selectedCV?.Title ?? "Yok"}");
+                        if (selectedCV != null)
+                        {
+                            Console.WriteLine($"ParsedContent uzunluğu: {selectedCV.ParsedContent?.Length ?? 0}");
+                            Console.WriteLine($"ParsedContent ilk 200 karakter: {selectedCV.ParsedContent?.Substring(0, Math.Min(200, selectedCV.ParsedContent?.Length ?? 0))}...");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("User ID belirtilmedi, CV bulunamadı");
+                    }
                 }
 
                 var userContext = selectedCV != null
-                    ? $@"Kullanıcının CV'si:
+                    ? $@"CV BİLGİLERİ:
 Başlık: {selectedCV.Title}
 Yetenekler: {selectedCV.Skills}
 Deneyim: {selectedCV.Experience}
 Eğitim: {selectedCV.Education}
-İçerik: {selectedCV.ParsedContent}
 
-Lütfen bu CV için:
-1. Güçlü yönleri
-2. Geliştirilmesi gereken alanları
-3. Öneriler
-4. Uygun pozisyonlar
-başlıkları altında detaylı bir analiz yap."
-                    : "Kullanıcının henüz bir CV'si yok.";
+CV İÇERİK DETAYI:
+{(!string.IsNullOrEmpty(selectedCV.ParsedContent) ? selectedCV.ParsedContent : "CV içeriği henüz analiz edilemedi.")}
+
+Bu CV'ye uygun iş alanları neler?"
+                    : "CV yok. Genel iş alanları öner.";
 
                 // İş eşleştirme özelliği
                 string matchingJobsInfo = "";
@@ -140,7 +156,7 @@ başlıkları altında detaylı bir analiz yap."
                         temperature = 0.7,
                         topK = 40,
                         topP = 0.95,
-                        maxOutputTokens = 2048
+                        maxOutputTokens = 800
                     },
                     safetySettings = new[]
                     {
