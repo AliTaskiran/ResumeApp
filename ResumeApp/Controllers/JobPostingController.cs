@@ -21,12 +21,136 @@ namespace ResumeApp.Controllers
             _jobApplicationService = jobApplicationService;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string analysis = null, string keywords = null, int? cvId = null)
         {
             var jobs = _jobPostingService.TGetList()
                 .Where(j => j.IsActive && !j.IsFilled)
                 .OrderByDescending(j => j.CreatedDate)
                 .ToList();
+
+            // Debug: Log the incoming parameters
+            System.Diagnostics.Debug.WriteLine($"=== JOB FILTERING DEBUG ===");
+            System.Diagnostics.Debug.WriteLine($"Analysis: {analysis}");
+            System.Diagnostics.Debug.WriteLine($"Keywords: {keywords}");
+            System.Diagnostics.Debug.WriteLine($"Total jobs before filtering: {jobs.Count}");
+
+            // If analysis data is provided, filter jobs based on keywords
+            if (!string.IsNullOrEmpty(analysis) && !string.IsNullOrEmpty(keywords))
+            {
+                // Decode URL-encoded parameters
+                var decodedAnalysis = System.Web.HttpUtility.UrlDecode(analysis);
+                var decodedKeywords = System.Web.HttpUtility.UrlDecode(keywords);
+                
+                var keywordList = decodedKeywords.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(k => k.Trim().ToLower())
+                    .ToList();
+
+                System.Diagnostics.Debug.WriteLine($"Decoded Analysis: {decodedAnalysis}");
+                System.Diagnostics.Debug.WriteLine($"Decoded Keywords: {decodedKeywords}");
+                System.Diagnostics.Debug.WriteLine($"Keywords to search: {string.Join(", ", keywordList)}");
+
+                // Filter jobs based on keywords with smarter matching
+                var filteredJobs = new List<JobPosting>();
+                
+                foreach (var job in jobs)
+                {
+                    var jobText = $"{job.Title} {job.Description} {job.RequiredSkills} {job.CompanyName}".ToLower();
+                    var matchedKeywords = new List<string>();
+                    
+                    // Smart keyword matching with context awareness
+                    foreach (var keyword in keywordList)
+                    {
+                        var lowerKeyword = keyword.ToLower();
+                        
+                        // Direct matches
+                        if (jobText.Contains(lowerKeyword))
+                        {
+                            matchedKeywords.Add(keyword);
+                            continue;
+                        }
+                        
+                        // Context-aware related term matching
+                        if (lowerKeyword.Contains("satış") || lowerKeyword.Contains("sales"))
+                        {
+                            if (jobText.Contains("sales") || jobText.Contains("pazarlama") || jobText.Contains("marketing") || 
+                                jobText.Contains("b2b") || jobText.Contains("müşteri") || jobText.Contains("customer"))
+                            {
+                                matchedKeywords.Add(keyword);
+                            }
+                        }
+                        else if (lowerKeyword.Contains("sağlık") || lowerKeyword.Contains("health"))
+                        {
+                            if (jobText.Contains("health") || jobText.Contains("medical") || jobText.Contains("hospital") || 
+                                jobText.Contains("healthcare") || jobText.Contains("tedavi") || jobText.Contains("treatment"))
+                            {
+                                matchedKeywords.Add(keyword);
+                            }
+                        }
+                        else if (lowerKeyword.Contains("turizm") || lowerKeyword.Contains("tourism"))
+                        {
+                            if (jobText.Contains("tourism") || jobText.Contains("travel") || jobText.Contains("hospitality") || 
+                                jobText.Contains("otel") || jobText.Contains("hotel") || jobText.Contains("seyahat"))
+                            {
+                                matchedKeywords.Add(keyword);
+                            }
+                        }
+                        else if (lowerKeyword == "it" && !jobText.Contains("it") && !jobText.Contains("information technology"))
+                        {
+                            // Skip "it" keyword if it's not explicitly about IT/technology
+                            continue;
+                        }
+                        else if (lowerKeyword.Contains("hr") || lowerKeyword.Contains("human"))
+                        {
+                            if (jobText.Contains("human") || jobText.Contains("resources") || jobText.Contains("personnel") || 
+                                jobText.Contains("recruitment") || jobText.Contains("employee"))
+                            {
+                                matchedKeywords.Add(keyword);
+                            }
+                        }
+                        else if (lowerKeyword.Contains("yazılım") || lowerKeyword.Contains("software") || lowerKeyword.Contains("developer"))
+                        {
+                            if (jobText.Contains("software") || jobText.Contains("developer") || jobText.Contains("programming") || 
+                                jobText.Contains("coding") || jobText.Contains("development"))
+                            {
+                                matchedKeywords.Add(keyword);
+                            }
+                        }
+                    }
+                    
+                    if (matchedKeywords.Any())
+                    {
+                        filteredJobs.Add(job);
+                        System.Diagnostics.Debug.WriteLine($"Job '{job.Title}' matched keywords: {string.Join(", ", matchedKeywords)}");
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Filtered jobs count: {filteredJobs.Count}");
+
+                // If filtered jobs are found, use them; otherwise use all jobs
+                if (filteredJobs.Any())
+                {
+                    jobs = filteredJobs;
+                    System.Diagnostics.Debug.WriteLine("Using filtered jobs");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("No matches found, using all jobs");
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("No analysis or keywords provided");
+            }
+
+            // Pass analysis data to view
+            ViewBag.Analysis = !string.IsNullOrEmpty(analysis) ? System.Web.HttpUtility.UrlDecode(analysis) : analysis;
+            ViewBag.Keywords = !string.IsNullOrEmpty(keywords) ? System.Web.HttpUtility.UrlDecode(keywords) : keywords;
+            ViewBag.CvId = cvId;
+            ViewBag.IsFiltered = !string.IsNullOrEmpty(analysis);
+
+            System.Diagnostics.Debug.WriteLine($"Final jobs count: {jobs.Count}");
+            System.Diagnostics.Debug.WriteLine($"IsFiltered: {ViewBag.IsFiltered}");
+            System.Diagnostics.Debug.WriteLine($"=== END DEBUG ===");
 
             return View(jobs);
         }

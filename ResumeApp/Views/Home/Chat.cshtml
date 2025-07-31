@@ -42,10 +42,20 @@
                         </div>
                     </div>
                     
-                    <!-- Analyze Button -->
-                    <button id="analyzeButton" class="hidden w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        Seçili CV'yi Analiz Et
-                    </button>
+                                         <!-- Analyze Button -->
+                     <button id="analyzeButton" class="hidden w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                         Seçili CV'yi Analiz Et
+                     </button>
+                     
+                     <!-- Job Recommendations Button -->
+                     <button id="jobRecommendationsButton" class="hidden w-full mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                         <span class="flex items-center justify-center space-x-2">
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2h8z"/>
+                             </svg>
+                             <span>Analize Göre İş Tekliflerini Getir</span>
+                         </span>
+                     </button>
                 </div>
             </div>
 
@@ -144,8 +154,10 @@
         const chatForm = document.getElementById('chatForm');
         const cvList = document.getElementById('cvList');
         const analyzeButton = document.getElementById('analyzeButton');
+        const jobRecommendationsButton = document.getElementById('jobRecommendationsButton');
         
         let selectedCvId = null;
+        let lastAnalysisResponse = null;
         
         // Scroll to bottom
         function scrollToBottom() {
@@ -228,8 +240,11 @@
                 selectedCard.classList.add('border-blue-500', 'border-2');
             }
 
-            // Show analyze button
-            analyzeButton.classList.remove('hidden');
+                         // Show analyze button
+             analyzeButton.classList.remove('hidden');
+             
+             // Hide job recommendations button when new CV is selected
+             jobRecommendationsButton.classList.add('hidden');
         }
 
         // Analyze selected CV
@@ -269,11 +284,15 @@
                 analyzeButton.disabled = false;
                 analyzeButton.innerHTML = 'Seçili CV\'yi Analiz Et';
 
-                if (data.success) {
-                    addMessage(data.response, true);
-                } else {
-                    throw new Error(data.error || 'Analiz sırasında bir hata oluştu');
-                }
+                                 if (data.success) {
+                     lastAnalysisResponse = data.response;
+                     addMessage(data.response, true);
+                     
+                     // Show job recommendations button after successful analysis
+                     jobRecommendationsButton.classList.remove('hidden');
+                 } else {
+                     throw new Error(data.error || 'Analiz sırasında bir hata oluştu');
+                 }
             } catch (error) {
                 console.error('CV analizi sırasında hata:', error);
                 addMessage('CV analizi sırasında bir hata oluştu: ' + error.message, true);
@@ -396,11 +415,103 @@
             }
         });
 
-        // Analyze button click
-        analyzeButton.addEventListener('click', analyzeSelectedCV);
-        
-        // Load CV list on page load
-        loadCVList();
+                 // Analyze button click
+         analyzeButton.addEventListener('click', analyzeSelectedCV);
+         
+                   // Job recommendations button click
+          jobRecommendationsButton.addEventListener('click', function() {
+              if (lastAnalysisResponse) {
+                  // Extract keywords from analysis for filtering
+                  const keywords = extractKeywordsFromAnalysis(lastAnalysisResponse);
+                  console.log('Sending keywords:', keywords);
+                  
+                  // Build URL without double encoding
+                  const params = new URLSearchParams();
+                  params.append('analysis', lastAnalysisResponse);
+                  params.append('keywords', keywords.join(','));
+                  params.append('cvId', selectedCvId);
+                  
+                  // Redirect to job postings with analysis data
+                  window.location.href = `/JobPosting/Index?${params.toString()}`;
+              } else {
+                  alert('Önce bir CV analizi yapmanız gerekiyor.');
+              }
+          });
+         
+         // Extract keywords from analysis text
+         function extractKeywordsFromAnalysis(analysisText) {
+             const keywords = [];
+             
+                           // Common job-related keywords that match our job postings
+              const jobKeywords = [
+                  // Technology keywords (only if CV mentions tech skills)
+                  'yazılım', 'software', 'developer', 'geliştirici', 'programcı', 'programmer',
+                  'mühendis', 'engineer', 'frontend', 'backend', 'full stack', 'fullstack',
+                  'devops', 'python', 'java', 'javascript', 'react', 'angular', 'vue',
+                  'node.js', 'nodejs', 'asp.net', 'dotnet', 'c#', 'php', 'mysql', 'sql',
+                  'mongodb', 'docker', 'kubernetes', 'aws', 'azure', 'cloud', 'ci/cd',
+                  'machine learning', 'ai', 'artificial intelligence', 'data science',
+                  
+                  // Business keywords
+                  'pazarlama', 'marketing', 'satış', 'sales', 'müşteri', 'customer',
+                  'yönetim', 'management', 'finans', 'finance', 'muhasebe', 'accounting',
+                  'insan kaynakları', 'hr', 'human resources', 'eğitim', 'education',
+                  'sağlık', 'health', 'turizm', 'tourism', 'medya', 'media',
+                  'reklam', 'advertising', 'iletişim', 'communication', 'hukuk', 'law',
+                  'mimarlık', 'architecture', 'inşaat', 'construction', 'lojistik', 'logistics',
+                  'üretim', 'production', 'kalite', 'quality', 'güvenlik', 'security',
+                  'teknoloji', 'technology', 'veri', 'data', 'analiz', 'analysis',
+                  'proje', 'project', 'operasyon', 'operation', 'strateji', 'strategy',
+                  'planlama', 'planning', 'araştırma', 'research', 'senior', 'junior',
+                  'stajyer', 'intern', 'staj', 'internship', 'information technology'
+              ];
+             
+             const lowerText = analysisText.toLowerCase();
+             
+                           // Extract keywords that appear in the analysis with context awareness
+              const techKeywords = ['yazılım', 'software', 'developer', 'programming', 'coding', 'python', 'java', 'javascript', 'react', 'angular', 'vue', 'node.js', 'asp.net', 'c#', 'php', 'mysql', 'sql', 'mongodb', 'docker', 'aws', 'azure', 'cloud', 'machine learning', 'ai', 'artificial intelligence', 'data science'];
+              const businessKeywords = ['pazarlama', 'marketing', 'satış', 'sales', 'müşteri', 'customer', 'yönetim', 'management', 'finans', 'finance', 'muhasebe', 'accounting', 'insan kaynakları', 'hr', 'human resources', 'eğitim', 'education', 'sağlık', 'health', 'turizm', 'tourism', 'medya', 'media', 'reklam', 'advertising', 'iletişim', 'communication', 'hukuk', 'law', 'mimarlık', 'architecture', 'inşaat', 'construction', 'lojistik', 'logistics', 'üretim', 'production', 'kalite', 'quality', 'güvenlik', 'security', 'teknoloji', 'technology', 'veri', 'data', 'analiz', 'analysis', 'proje', 'project', 'operasyon', 'operation', 'strateji', 'strategy', 'planlama', 'planning', 'araştırma', 'research', 'senior', 'junior', 'stajyer', 'intern', 'staj', 'internship', 'information technology'];
+              
+              // Check if CV has tech-related content
+              const hasTechContent = techKeywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
+              
+              // Extract keywords based on context
+              jobKeywords.forEach(keyword => {
+                  const lowerKeyword = keyword.toLowerCase();
+                  
+                  // Only include tech keywords if CV mentions tech skills
+                  if (techKeywords.includes(keyword)) {
+                      if (hasTechContent && lowerText.includes(lowerKeyword)) {
+                          keywords.push(keyword);
+                      }
+                  }
+                  // Always include business keywords if found
+                  else if (businessKeywords.includes(keyword) && lowerText.includes(lowerKeyword)) {
+                      keywords.push(keyword);
+                  }
+                  // Include other relevant keywords
+                  else if (lowerText.includes(lowerKeyword)) {
+                      keywords.push(keyword);
+                  }
+              });
+              
+              // If no specific keywords found, add context-appropriate ones
+              if (keywords.length === 0) {
+                  if (hasTechContent) {
+                      keywords.push('developer', 'mühendis', 'yazılım', 'software');
+                  } else {
+                      keywords.push('satış', 'pazarlama', 'yönetim', 'management');
+                  }
+              }
+             
+             console.log('Analysis text:', analysisText);
+             console.log('Extracted keywords:', keywords);
+             
+             return keywords;
+         }
+         
+         // Load CV list on page load
+         loadCVList();
         
         console.log('Chat sayfası event listener\'ları eklendi');
     });
