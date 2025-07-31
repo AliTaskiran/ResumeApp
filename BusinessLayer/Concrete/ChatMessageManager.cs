@@ -24,6 +24,11 @@ namespace BusinessLayer.Concrete
             return chatMessage;
         }
 
+        public async Task<List<ChatMessage>> GetMessagesByUserIdAsync(int userId)
+        {
+            return await _chatMessageDal.GetMessagesByUserIdAsync(userId);
+        }
+
         public void TAdd(ChatMessage t)
         {
             _chatMessageDal.Insert(t);

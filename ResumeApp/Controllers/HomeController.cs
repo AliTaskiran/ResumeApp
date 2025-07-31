@@ -301,7 +301,7 @@ namespace ResumeApp.Controllers
                 
                 await _chatMessageService.AddAsync(botMessage);
 
-                // Session'dan temizle
+                // Session'dan temizle - sadece başarılı DB kaydından sonra
                 HttpContext.Session.Remove("LastAnalysis");
 
                 return Json(new { success = true, response = analysisResult });
@@ -342,6 +342,18 @@ namespace ResumeApp.Controllers
                 _logger.LogError(ex, "Mesajlar alınırken hata: {Message}", ex.Message);
                 return Json(new { success = false, error = "Bir hata oluştu: " + ex.Message });
             }
+        }
+
+        public async Task<IActionResult> Chat()
+        {
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var messages = await _chatMessageService.GetMessagesByUserIdAsync(userId);
+            return View(messages);
         }
     }
 

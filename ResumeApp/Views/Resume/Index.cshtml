@@ -90,13 +90,6 @@
                                     </div>
                                     <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                                         <div class="flex space-x-2">
-                                            <button onclick="analyzeCV(@resume.Id)" 
-                                                    class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                                </svg>
-                                                Analiz Et
-                                            </button>
                                             @if (!resume.IsMainResume)
                                             {
                                                 <a href="@Url.Action("SetMainResume", new { id = resume.Id })" 
@@ -189,11 +182,58 @@
     </style>
     <script>
         async function analyzeCV(cvId) {
-            const modal = document.getElementById('analysisModal');
-            const content = document.getElementById('analysisContent');
-            const jobRecommendations = document.getElementById('jobRecommendations');
-            modal.classList.remove('hidden');
-            content.textContent = 'CV analizi yapılıyor...';
+            console.log('🔍 analyzeCV fonksiyonu çağrıldı, CV ID:', cvId);
+            
+            // CV analizi yap
+            const response = await fetch(`/Home/AnalyzeCV/${cvId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            console.log('AnalyzeCV JSON yanıtı:', data);
+            console.log('data.success:', data.success);
+            console.log('data.response:', data.response);
+
+            if (data.success) {
+                console.log('✅ data.success true, içeriği modal\'a yazılıyor...');
+                
+                // Modal'ı göster
+                const modal = document.getElementById('analysisModal');
+                const content = document.getElementById('analysisContent');
+                const jobRecommendations = document.getElementById('jobRecommendations');
+                modal.classList.remove('hidden');
+                content.textContent = data.response;
+                
+                // İş önerilerini göster
+                if (data.jobRecommendations && data.jobRecommendations.length > 0) {
+                    jobRecommendations.innerHTML = '';
+                    data.jobRecommendations.forEach(job => {
+                        const jobCard = document.createElement('div');
+                        jobCard.className = 'bg-white rounded-lg shadow-sm border border-gray-200 p-4';
+                        jobCard.innerHTML = `
+                            <h3 class="font-semibold text-gray-900 mb-2">${job.Title}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${job.Company}</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500">${job.Location}</span>
+                                <span class="text-xs font-medium text-green-600">${job.MatchPercentage}% Eşleşme</span>
+                            </div>
+                        `;
+                        jobRecommendations.appendChild(jobCard);
+                    });
+                }
+                
+                // Analiz özetini sohbete gönder
+                const analysisLines = data.response.split('\n');
+                const shortSummary = analysisLines.slice(0, 5).join('\n') + '\n\n✅ CV analizi tamamlandı! Detayları görmek için CV listesindeki "Analiz Et" butonuna tıklayabilirsiniz.';
+                console.log('🚀 sendAnalysisToChat çağrılıyor, shortSummary:', shortSummary);
+                await sendAnalysisToChat(shortSummary);
+            } else {
+                console.error('❌ CV analizi başarısız:', data.error || 'Bilinmeyen hata');
+                alert('CV analizi yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+            }
             jobRecommendations.innerHTML = '<div class="text-center text-gray-500"><svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" /></svg><p>İş ilanları yükleniyor...</p></div>';
 
             try {
@@ -211,13 +251,18 @@
                 });
 
                 const data = await response.json();
+                console.log('AnalyzeCV JSON yanıtı:', data);
+                console.log('data.success:', data.success);
+                console.log('data.response:', data.response);
 
                 if (data.success) {
+                    console.log('✅ data.success true, içeriği modal\'a yazılıyor...');
                     content.textContent = data.response;
                     
                     // Analiz özetini sohbete gönder (tam metin çok uzun olabilir)
                     const analysisLines = data.response.split('\n');
                     const shortSummary = analysisLines.slice(0, 5).join('\n') + '\n\n✅ CV analizi tamamlandı! Detayları görmek için CV listesindeki "Analiz Et" butonuna tıklayabilirsiniz.';
+                    console.log('🚀 sendAnalysisToChat çağrılıyor, shortSummary:', shortSummary.substring(0, 100) + '...');
                     await sendAnalysisToChat(shortSummary);
                     
                     jobRecommendations.innerHTML = ''; // Clear previous recommendations
@@ -283,10 +328,14 @@
 
         async function sendAnalysisToChat(analysisText) {
             try {
-                // CV analiz sonucunu direkt sohbete gönder
-                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                console.log('sendAnalysisToChat çağrıldı, analysisText uzunluğu:', analysisText.length);
                 
-                // Önce kullanıcı mesajını ekle
+                // Analiz sonucunu direkt sohbete gönder (parametreyi kullan)
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                console.log('CSRF token bulundu:', !!token);
+                
+                // Kullanıcı mesajını ekle
+                console.log('Kullanıcı mesajı gönderiliyor...');
                 const userResponse = await fetch('/Home/SendMessage', {
                     method: 'POST',
                     headers: {
@@ -294,11 +343,14 @@
                         'RequestVerificationToken': token
                     },
                     body: JSON.stringify({
-                        content: 'CV analiz sonucumu göster'
+                        content: 'CV Analizi Talebi'
                     })
                 });
 
-                // Sonra analiz sonucunu bot mesajı olarak ekle
+                console.log('Kullanıcı mesajı yanıtı:', userResponse.status);
+
+                // Bot yanıtını ekle
+                console.log('Bot mesajı gönderiliyor...');
                 const botResponse = await fetch('/Home/SendMessage', {
                     method: 'POST',
                     headers: {
@@ -310,13 +362,18 @@
                     })
                 });
 
+                console.log('Bot mesajı yanıtı:', botResponse.status);
                 const data = await botResponse.json();
+                console.log('Bot mesajı JSON yanıtı:', data);
 
                 if (botResponse.ok && data.success) {
-                    // Ana sayfaya yönlendir ve sohbeti aç
+                    console.log('Mesajlar başarıyla gönderildi, Chat sayfasına yönlendiriliyor...');
+                    // Chat sayfasına yönlendir
                     setTimeout(() => {
-                        window.location.href = '/Home/Index?openChat=true';
-                    }, 2000);
+                        window.location.href = '/Home/Chat';
+                    }, 1000);
+                } else {
+                    console.error('Analiz sohbete kaydedilirken hata:', data.error || 'Bilinmeyen hata');
                 }
             } catch (error) {
                 console.error('Analiz sohbete gönderilirken hata:', error);

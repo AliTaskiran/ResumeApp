@@ -13,7 +13,7 @@ namespace BusinessLayer.Concrete
         private readonly IResumeService _resumeService;
         private readonly IMatchingService _matchingService;
         private readonly HttpClient _httpClient;
-        private const string GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+        private const string GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
 
         private const string SYSTEM_PROMPT = @"Sen samimi ve yardımsever bir CV-İş Eşleştirme asistanısın.
 

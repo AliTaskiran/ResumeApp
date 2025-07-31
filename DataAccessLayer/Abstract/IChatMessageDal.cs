@@ -10,5 +10,6 @@ namespace DataAccessLayer.Abstract
     public interface IChatMessageDal:IGenericDal<ChatMessage>
     {
         Task<ChatMessage> AddAsync(ChatMessage chatMessage);
+        Task<List<ChatMessage>> GetMessagesByUserIdAsync(int userId);
     }
 }

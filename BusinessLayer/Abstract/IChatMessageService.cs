@@ -10,5 +10,6 @@ namespace BusinessLayer.Abstract
     public interface IChatMessageService : IGenericService<ChatMessage>
     {
         Task<ChatMessage> AddAsync(ChatMessage chatMessage);
+        Task<List<ChatMessage>> GetMessagesByUserIdAsync(int userId);
     }
 }
